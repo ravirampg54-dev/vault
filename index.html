@@ -3,7 +3,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0096e0">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Pocket Vault">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="icon" href="icons/icon-192.png">
@@ -42,11 +44,13 @@ label{font-weight:700;font-size:14px;display:grid;gap:4px}.opts{display:flex;gap
 .empty{text-align:center;color:var(--mu);padding:40px 10px;grid-column:1/-1}.err{color:var(--rd);font-size:14px}
 .pub{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
 .toast{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:var(--gd);color:#3a2b00;padding:8px 16px;border-radius:20px;font-weight:700;z-index:20}
+.inst{position:fixed;left:16px;right:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:8;background:var(--card);border:1px solid var(--bd);border-radius:18px;box-shadow:var(--sh);padding:14px;display:grid;gap:10px}
+.inst p{margin:0;font-size:14px;color:var(--mu)}
 </style></head><body><div id="app"></div>
 <script>
 const $=s=>document.querySelector(s);
 const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast('Storage full or blocked')}}};
-let S={user:ls.get('dpv_session',null),filter:'ALL',q:'',modal:null,del:null,authMode:'login',err:'',img:null};
+let S={user:ls.get('dpv_session',null),filter:'ALL',q:'',modal:null,del:null,authMode:'login',err:'',img:null,how:0};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const projects=()=>ls.get('dpv_p_'+S.user,[]);const save=p=>ls.set('dpv_p_'+S.user,p);
 const slug=n=>n.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'project';
@@ -54,6 +58,19 @@ const safeUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
 const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));const dec=s=>JSON.parse(decodeURIComponent(escape(atob(s))));
 function shareUrl(p){return location.origin+location.pathname+'#/p/'+slug(p.name)+'?d='+enc({n:p.name,c:p.category,l:p.liveUrl,g:p.githubUrl})}
 function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),1800)}
+let iPrompt=null;
+const isStandalone=()=>matchMedia('(display-mode:standalone)').matches||matchMedia('(display-mode:fullscreen)').matches||navigator.standalone===true;
+const isIOS=/iP(hone|ad|od)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const howSteps=()=>isIOS?['Tap the Share button in Safari','Choose Add to Home Screen','Tap Add — it installs as an app, not a shortcut']
+:['Open your browser menu','Choose Install app (not Add to Home screen)','Confirm Install'];
+function instbar(){if(isStandalone())return'';
+ if(S.how)return `<div class="ov" data-inst="1"><div class="md"><h3 style="margin:0">Install as an app</h3><ol style="margin:0;padding-left:20px;display:grid;gap:8px">${howSteps().map(s=>`<li>${esc(s)}</li>`).join('')}</ol><div class="row"><button class="ghost" data-a="closeinst">Close</button></div></div></div>`;
+ if(!iPrompt&&!isIOS)return'';
+ return `<div class="inst" data-inst="1"><p>${iPrompt?'Install Doraemon Pocket Vault to your home screen and launch it like a real app.':'Add Doraemon Pocket Vault to your home screen to launch it like a real app.'}</p><div class="row"><button class="gold" data-a="${iPrompt?'install':'howinstall'}">${iPrompt?'⬇️ INSTALL APP':'📲 HOW TO INSTALL'}</button>${iPrompt?`<button class="ghost" data-a="closeinst">Not now</button>`:''}</div></div>`}
+function syncInst(){const app=$('#app');if(!app||S.modal)return;const cur=app.querySelector('[data-inst]'),html=instbar();
+ if(!html){if(cur)cur.remove();return}
+ const box=document.createElement('div');box.innerHTML=html;const el=box.firstElementChild;if(!el)return;
+ if(cur)cur.replaceWith(el);else app.append(el)}
 async function hash(p){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('dpv-salt:'+p));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 function theme(t){document.documentElement.dataset.theme=t;ls.set('dpv_theme',t)}theme(ls.get('dpv_theme','dark'));
 const route=()=>location.hash.replace(/^#/,'')||'/';
@@ -80,14 +97,14 @@ function render(){const r=route().split('?')[0];const app=$('#app');
 if(r.startsWith('/p/'))return renderPublic(r,app);
 if(!S.user){app.innerHTML=`<div class="w pub"><h1>🐱 DORAEMON POCKET VAULT</h1><p class="sub">Store your apps. Store your games. Share them instantly.</p>
 <div class="md" style="text-align:left"><label>Email<input id="a_e" type="email" autocomplete="email"></label><label>Password (min 8)<input id="a_p" type="password" autocomplete="${S.authMode==='login'?'current-password':'new-password'}"></label><div class="err">${esc(S.err)}</div>
-<button data-a="auth">${S.authMode==='login'?'Login':'Register'}</button><button class="ghost" data-a="swap">${S.authMode==='login'?'New here? Register':'Have an account? Login'}</button></div></div>`;return}
+<button data-a="auth">${S.authMode==='login'?'Login':'Register'}</button><button class="ghost" data-a="swap">${S.authMode==='login'?'New here? Register':'Have an account? Login'}</button></div>${instbar()}</div>`;return}
 const ps=projects(),na=ps.filter(p=>p.category==='APP').length,ng=ps.length-na;
 let body='';
 if(r==='/'||r==='')body=`<div class="stats"><div class="stat" onclick="location.hash='#/apps'">📱 APPS<b>${na}</b>Projects</div><div class="stat g" onclick="location.hash='#/games'">🎮 GAMES<b>${ng}</b>Projects</div></div>${bar(1)}<div class="grid" id="grid">${list()}</div>`;
 else if(r==='/apps')body=`<h2>📱 APPS</h2>${bar()}<div class="grid" id="grid">${list('APP')}</div>`;
 else if(r==='/games')body=`<h2>🎮 GAMES</h2>${bar()}<div class="grid" id="grid">${list('GAME')}</div>`;
 else body=`<h2>🔍 Search</h2>${bar()}<div class="grid" id="grid">${list()}</div>`;
-app.innerHTML=`<div class="w">${head()}${body}</div>${nav(r==='/'?'/':r)}${modal()}`}
+app.innerHTML=`<div class="w">${head()}${body}</div>${nav(r==='/'?'/':r)}${modal()}${instbar()}`}
 const bar=f=>`<div class="bar"><input id="q" placeholder="🔍 Search apps and games..." value="${esc(S.q)}">${f?['ALL','APP','GAME'].map(k=>`<button class="chip ${S.filter===k?'on':''}" data-a="filter" data-k="${k}">${{ALL:'All',APP:'Apps',GAME:'Games'}[k]}</button>`).join(''):''}</div>`;
 function renderPublic(r,app){let p=null;const m=location.hash.match(/[?&]d=([^&]+)/);
 try{if(m){const d=dec(m[1]);p={name:d.n,category:d.c,liveUrl:d.l,githubUrl:d.g}}}catch(e){}
@@ -101,6 +118,9 @@ function resize(file){return new Promise(res=>{const r=new FileReader();r.onload
 document.addEventListener('input',e=>{if(e.target.id==='q'){S.q=e.target.value;const r=route();$('#grid').innerHTML=list(r==='/apps'?'APP':r==='/games'?'GAME':null)}});
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id,ps=S.user?projects():[];
 if(a==='theme'){theme(document.documentElement.dataset.theme==='dark'?'light':'dark');render()}
+else if(a==='install'){if(!iPrompt)return;const p=iPrompt;iPrompt=null;p.prompt();try{await p.userChoice}catch(er){}render()}
+else if(a==='howinstall'){S.how=1;render()}
+else if(a==='closeinst'){S.how=0;iPrompt=null;render()}
 else if(a==='logout'){S.user=null;ls.set('dpv_session',null);render()}
 else if(a==='swap'){S.authMode=S.authMode==='login'?'register':'login';S.err='';render()}
 else if(a==='auth'){const em=$('#a_e').value.trim().toLowerCase(),pw=$('#a_p').value;const us=ls.get('dpv_users',{});
@@ -123,6 +143,9 @@ save(ps);S.modal=null;render();toast('Saved')}
 else if(a==='share'){const p=ps.find(x=>x.id===id),u=shareUrl(p);
 if(navigator.share){try{await navigator.share({title:p.name,url:u});return}catch(er){if(er.name==='AbortError')return}}
 try{await navigator.clipboard.writeText(u);toast('Link copied!')}catch(er){prompt('Copy link:',u)}}});
-addEventListener('hashchange',render);render();
+addEventListener('hashchange',()=>{S.how=0;render()});
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();iPrompt=e;syncInst()});
+addEventListener('appinstalled',()=>{iPrompt=null;S.how=0;render();toast('Installed — launch it from your home screen')});
+render();
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 </script></body></html>
