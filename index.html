@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0096e0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Pocket Vault">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" href="icons/icon-192.png">
+<title>Doraemon Pocket Vault</title>
+<style>
+:root{--bg:#f1f7fd;--card:#fff;--tx:#0b2540;--mu:#5b7189;--bd:#dbe7f3;--bl:#0096e0;--rd:#e60012;--gd:#ffc107;--sh:0 6px 20px rgba(0,80,160,.12);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root:not([data-theme="light"]){--bg:#071a33;--card:#0e2a4d;--tx:#eef6ff;--mu:#9bb5d0;--bd:#1b3f6b;--sh:0 6px 20px rgba(0,0,0,.35)}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]):not([data-theme="light"]){}}
+:root[data-theme="dark"]{--bg:#071a33;--card:#0e2a4d;--tx:#eef6ff;--mu:#9bb5d0;--bd:#1b3f6b}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;padding-bottom:80px}
+.w{max-width:1000px;margin:0 auto;padding:16px}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+h1{margin:0;font-size:clamp(20px,5vw,30px);letter-spacing:.5px}.sub{color:var(--mu);margin:2px 0 16px}
+button,.btn{font:inherit;cursor:pointer;border:0;border-radius:12px;padding:10px 14px;font-weight:700;background:var(--bl);color:#fff;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:.15s}
+button:hover,.btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
+.ghost{background:transparent;color:var(--tx);border:1px solid var(--bd)}.red{background:var(--rd)}.gold{background:var(--gd);color:#3a2b00}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.stat{background:linear-gradient(160deg,var(--bl),#0070b8);color:#fff;border-radius:20px;padding:18px;box-shadow:var(--sh);cursor:pointer;border-bottom:6px solid var(--gd)}
+.stat.g{background:linear-gradient(160deg,#ef3340,#b3000f)}.stat b{font-size:34px;display:block}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+input,select{font:inherit;width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx)}
+.bar input{flex:1;min-width:180px}.chip{background:var(--card);color:var(--tx);border:1px solid var(--bd)}.chip.on{background:var(--bl);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.card{background:var(--card);border-radius:18px;overflow:hidden;box-shadow:var(--sh);border:1px solid var(--bd);animation:pop .3s}
+@keyframes pop{from{opacity:0;transform:scale(.96)}}
+.img{height:140px;background:linear-gradient(135deg,var(--bl),#6cc9ff) center/cover;display:flex;align-items:center;justify-content:center;font-size:44px}
+.cb{padding:14px;display:grid;gap:10px}.cb h3{margin:0;font-size:17px}.tag{font-size:12px;font-weight:800;color:var(--bl)}.tag.g{color:var(--rd)}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1}.sm{padding:7px 10px;font-size:13px}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);display:flex;justify-content:space-around;padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
+nav a{color:var(--mu);text-decoration:none;font-size:12px;text-align:center;padding:4px 10px}nav a.on{color:var(--bl);font-weight:800}nav a span{display:block;font-size:20px}
+.fab{position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:6;border-radius:30px;padding:14px 18px;background:var(--rd);box-shadow:var(--sh)}
+.ov{position:fixed;inset:0;background:rgba(0,10,30,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.md{background:var(--card);border-radius:20px;padding:18px;width:100%;max-width:440px;max-height:92%;overflow:auto;display:grid;gap:10px}
+label{font-weight:700;font-size:14px;display:grid;gap:4px}.opts{display:flex;gap:8px}.opts label{flex:1;border:1px solid var(--bd);border-radius:12px;padding:10px;display:flex;gap:6px;align-items:center}
+.empty{text-align:center;color:var(--mu);padding:40px 10px;grid-column:1/-1}.err{color:var(--rd);font-size:14px}
+.pub{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+.toast{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:var(--gd);color:#3a2b00;padding:8px 16px;border-radius:20px;font-weight:700;z-index:20}
+</style></head><body><div id="app"></div>
+<script>
+const $=s=>document.querySelector(s);
+const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){toast('Storage full or blocked')}}};
+let S={user:ls.get('dpv_session',null),filter:'ALL',q:'',modal:null,del:null,authMode:'login',err:'',img:null};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const projects=()=>ls.get('dpv_p_'+S.user,[]);const save=p=>ls.set('dpv_p_'+S.user,p);
+const slug=n=>n.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'project';
+const safeUrl=u=>/^https?:\/\//i.test(u||'')?u:'';
+const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o))));const dec=s=>JSON.parse(decodeURIComponent(escape(atob(s))));
+function shareUrl(p){return location.origin+location.pathname+'#/p/'+slug(p.name)+'?d='+enc({n:p.name,c:p.category,l:p.liveUrl,g:p.githubUrl})}
+function toast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),1800)}
+async function hash(p){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('dpv-salt:'+p));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function theme(t){document.documentElement.dataset.theme=t;ls.set('dpv_theme',t)}theme(ls.get('dpv_theme','dark'));
+const route=()=>location.hash.replace(/^#/,'')||'/';
+function thumb(p){return `<div class="img" style="${p.imageUrl?`background-image:url('${p.imageUrl}')`:''}">${p.imageUrl?'':(p.category==='GAME'?'🎮':'📱')}</div>`}
+function card(p){const g=p.category==='GAME';return `<div class="card">${thumb(p)}<div class="cb"><h3>${esc(p.name)}</h3><div class="tag ${g?'g':''}">${g?'🎮 GAME':'📱 APP'}</div>
+<div class="row"><a class="btn ${g?'red':''}" target="_blank" rel="noopener" href="${esc(safeUrl(p.liveUrl))}">${g?'🎮 PLAY GAME':'🌐 OPEN APP'}</a>${p.githubUrl?`<a class="btn ghost" target="_blank" rel="noopener" href="${esc(safeUrl(p.githubUrl))}">🐙 GITHUB</a>`:''}</div>
+<div class="row"><button class="gold" data-a="share" data-id="${p.id}">🔗 SHARE</button><button class="ghost sm" data-a="edit" data-id="${p.id}">✏️ Edit</button><button class="ghost sm" data-a="del" data-id="${p.id}">🗑️ Delete</button></div></div></div>`}
+function list(cat){let l=projects();if(cat)l=l.filter(p=>p.category===cat);else if(S.filter!=='ALL')l=l.filter(p=>p.category===S.filter);
+const q=S.q.trim().toLowerCase();if(q)l=l.filter(p=>p.name.toLowerCase().includes(q));
+return l.length?l.map(card).join(''):'<div class="empty">🐱 The pocket is empty here.<br>Tap + ADD PROJECT to store something.</div>'}
+function nav(r){const i=[['/','🏠','Home'],['/apps','📱','Apps'],['/games','🎮','Games'],['/search','🔍','Search']];
+return `<nav>${i.map(x=>`<a href="#${x[0]}" class="${r===x[0]?'on':''}"><span>${x[1]}</span>${x[2]}</a>`).join('')}</nav><button class="fab" data-a="add">+ ADD PROJECT</button>`}
+function head(){return `<header><div><h1>🐱 DORAEMON POCKET VAULT</h1></div><div class="row" style="flex:none"><button class="ghost sm" data-a="theme">${document.documentElement.dataset.theme==='dark'?'☀️ Light':'🌙 Dark'}</button><button class="ghost sm" data-a="logout">Logout</button></div></header><p class="sub">All my apps and games in one pocket.</p>`}
+function modal(){if(S.del)return `<div class="ov"><div class="md"><h3 style="margin:0">Delete this project?</h3><div class="row"><button class="ghost" data-a="cancel">CANCEL</button><button class="red" data-a="confirmdel">DELETE</button></div></div></div>`;
+if(!S.modal)return'';const p=S.modal.p||{category:'APP'};
+return `<div class="ov"><div class="md"><h3 style="margin:0">${S.modal.p?'Edit':'Add'} Project</h3>
+<label>Project Name<input id="f_n" value="${esc(p.name)}" placeholder="AI Student Career Assistant"></label>
+<label>Category<span class="opts"><label><input type="radio" name="cat" value="APP" ${p.category==='APP'?'checked':''} style="width:auto"> 📱 Apps</label><label><input type="radio" name="cat" value="GAME" ${p.category==='GAME'?'checked':''} style="width:auto"> 🎮 Games</label></span></label>
+<label>🌐 Live Project<input id="f_l" type="url" value="${esc(p.liveUrl)}" placeholder="https://my-project.vercel.app"></label>
+<label>🐙 GitHub<input id="f_g" type="url" value="${esc(p.githubUrl)}" placeholder="https://github.com/username/project"></label>
+<label>Project Image<input id="f_i" type="file" accept="image/*"></label>
+<div class="err" id="err"></div><div class="row"><button class="ghost" data-a="cancel">Cancel</button><button data-a="saveproj">Save</button></div></div></div>`}
+function render(){const r=route().split('?')[0];const app=$('#app');
+if(r.startsWith('/p/'))return renderPublic(r,app);
+if(!S.user){app.innerHTML=`<div class="w pub"><h1>🐱 DORAEMON POCKET VAULT</h1><p class="sub">Store your apps. Store your games. Share them instantly.</p>
+<div class="md" style="text-align:left"><label>Email<input id="a_e" type="email" autocomplete="email"></label><label>Password (min 8)<input id="a_p" type="password" autocomplete="${S.authMode==='login'?'current-password':'new-password'}"></label><div class="err">${esc(S.err)}</div>
+<button data-a="auth">${S.authMode==='login'?'Login':'Register'}</button><button class="ghost" data-a="swap">${S.authMode==='login'?'New here? Register':'Have an account? Login'}</button></div></div>`;return}
+const ps=projects(),na=ps.filter(p=>p.category==='APP').length,ng=ps.length-na;
+let body='';
+if(r==='/'||r==='')body=`<div class="stats"><div class="stat" onclick="location.hash='#/apps'">📱 APPS<b>${na}</b>Projects</div><div class="stat g" onclick="location.hash='#/games'">🎮 GAMES<b>${ng}</b>Projects</div></div>${bar(1)}<div class="grid" id="grid">${list()}</div>`;
+else if(r==='/apps')body=`<h2>📱 APPS</h2>${bar()}<div class="grid" id="grid">${list('APP')}</div>`;
+else if(r==='/games')body=`<h2>🎮 GAMES</h2>${bar()}<div class="grid" id="grid">${list('GAME')}</div>`;
+else body=`<h2>🔍 Search</h2>${bar()}<div class="grid" id="grid">${list()}</div>`;
+app.innerHTML=`<div class="w">${head()}${body}</div>${nav(r==='/'?'/':r)}${modal()}`}
+const bar=f=>`<div class="bar"><input id="q" placeholder="🔍 Search apps and games..." value="${esc(S.q)}">${f?['ALL','APP','GAME'].map(k=>`<button class="chip ${S.filter===k?'on':''}" data-a="filter" data-k="${k}">${{ALL:'All',APP:'Apps',GAME:'Games'}[k]}</button>`).join(''):''}</div>`;
+function renderPublic(r,app){let p=null;const m=location.hash.match(/[?&]d=([^&]+)/);
+try{if(m){const d=dec(m[1]);p={name:d.n,category:d.c,liveUrl:d.l,githubUrl:d.g}}}catch(e){}
+if(!p&&S.user){const s=r.slice(3);p=projects().find(x=>slug(x.name)===s)}
+if(!p){app.innerHTML='<div class="w pub"><h1>🐱</h1><p>Project not found.</p><a class="btn" href="#/">Open Vault</a></div>';return}
+const g=p.category==='GAME';app.innerHTML=`<div class="w pub"><h2>🐱 DORAEMON POCKET VAULT</h2><h1>${esc(p.name)}</h1><div class="tag ${g?'g':''}">${g?'🎮 GAME':'📱 APP'}</div>
+<a class="btn ${g?'red':''}" style="min-width:220px" target="_blank" rel="noopener" href="${esc(safeUrl(p.liveUrl))}">${g?'🎮 PLAY GAME':'🌐 OPEN APP'}</a>
+${p.githubUrl?`<a class="btn ghost" style="min-width:220px" target="_blank" rel="noopener" href="${esc(safeUrl(p.githubUrl))}">🐙 GITHUB</a>`:''}
+<hr style="width:200px;border:0;border-top:1px solid var(--bd)"><small class="sub">Powered by<br>Doraemon Pocket Vault</small></div>`}
+function resize(file){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const i=new Image();i.onload=()=>{const w=Math.min(640,i.width),c=document.createElement('canvas');c.width=w;c.height=i.height*w/i.width;c.getContext('2d').drawImage(i,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.7))};i.onerror=()=>res(null);i.src=r.result};r.readAsDataURL(file)})}
+document.addEventListener('input',e=>{if(e.target.id==='q'){S.q=e.target.value;const r=route();$('#grid').innerHTML=list(r==='/apps'?'APP':r==='/games'?'GAME':null)}});
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-a]');if(!b)return;const a=b.dataset.a,id=b.dataset.id,ps=S.user?projects():[];
+if(a==='theme'){theme(document.documentElement.dataset.theme==='dark'?'light':'dark');render()}
+else if(a==='logout'){S.user=null;ls.set('dpv_session',null);render()}
+else if(a==='swap'){S.authMode=S.authMode==='login'?'register':'login';S.err='';render()}
+else if(a==='auth'){const em=$('#a_e').value.trim().toLowerCase(),pw=$('#a_p').value;const us=ls.get('dpv_users',{});
+if(!/^\S+@\S+\.\S+$/.test(em)||pw.length<8){S.err='Valid email and 8+ character password required';return render()}
+const h=await hash(pw);if(S.authMode==='register'){if(us[em]){S.err='Account exists';return render()}us[em]=h;ls.set('dpv_users',us)}else if(us[em]!==h){S.err='Wrong email or password';return render()}
+S.user=em;S.err='';ls.set('dpv_session',em);render()}
+else if(a==='filter'){S.filter=b.dataset.k;render()}
+else if(a==='add'){S.modal={};render()}
+else if(a==='edit'){S.modal={p:ps.find(x=>x.id===id)};render()}
+else if(a==='del'){S.del=id;render()}
+else if(a==='cancel'){S.modal=null;S.del=null;render()}
+else if(a==='confirmdel'){save(ps.filter(x=>x.id!==S.del));S.del=null;render();toast('Deleted')}
+else if(a==='saveproj'){const n=$('#f_n').value.trim(),l=$('#f_l').value.trim(),g=$('#f_g').value.trim(),c=document.querySelector('[name=cat]:checked')?.value;
+if(!n||!c||!safeUrl(l)){$('#err').textContent='Name, category and a valid https:// live link are required';return}
+if(g&&!safeUrl(g)){$('#err').textContent='GitHub link must start with https://';return}
+const f=$('#f_i').files[0];const img=f?await resize(f):null;const now=new Date().toISOString();
+if(S.modal.p){const x=ps.find(y=>y.id===S.modal.p.id);Object.assign(x,{name:n,category:c,liveUrl:l,githubUrl:g,updatedAt:now});if(img)x.imageUrl=img}
+else ps.unshift({id:crypto.randomUUID(),userId:S.user,name:n,category:c,liveUrl:l,githubUrl:g,imageUrl:img||'',createdAt:now,updatedAt:now});
+save(ps);S.modal=null;render();toast('Saved')}
+else if(a==='share'){const p=ps.find(x=>x.id===id),u=shareUrl(p);
+if(navigator.share){try{await navigator.share({title:p.name,url:u});return}catch(er){if(er.name==='AbortError')return}}
+try{await navigator.clipboard.writeText(u);toast('Link copied!')}catch(er){prompt('Copy link:',u)}}});
+addEventListener('hashchange',render);render();
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script></body></html>
